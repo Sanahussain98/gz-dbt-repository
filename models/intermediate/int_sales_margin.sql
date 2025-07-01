@@ -1,7 +1,7 @@
   -- int_sales_margin.sql
 
   SELECT
-      products_id,
+      product_id,
       date_date,
       orders_id,
       revenue,
