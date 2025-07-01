@@ -1,0 +1,9 @@
+version:  2
+modal:
+   - name: gz_raw_data
+sources: 
+   - name: gz_raw_data
+     tables:
+       - name: raw_gz_sales as raw
+       - name: raw_gz_product as product
+       - name: raw_gz_ship as ship
