@@ -2,8 +2,8 @@ version:  2
 modal:
    - name: gz_raw_data
 sources: 
-   - name: gz_raw_data
+   - name: gz_raw_data as raw
      tables:
-       - name: raw_gz_sales as raw
+       - name: raw_gz_sales as sales
        - name: raw_gz_product as product
        - name: raw_gz_ship as ship
