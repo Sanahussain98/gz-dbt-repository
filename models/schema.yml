@@ -2,13 +2,12 @@ version: 2
 
 sources:
   - name: raw
-    schema: gz_raw_data # Ensure this dataset exists in BigQuery
+    schema: gz_raw_data # Ensure this matches the dataset where your raw_gz_ tables reside
     tables:
       - name: sales
-        identifier: raw_gz_sales # Ensure this matches your actual raw table name
+        identifier: raw_gz_sales
         description: sales of Greenweez / we have one row per product_id found in each orders_id
-        # Freshness testing for sales table (assuming date_date is suitable)
-        loaded_at_field: "CAST(date_date AS TIMESTAMP)" # Adjust type cast if needed for your database
+        loaded_at_field: "CAST(date_date AS TIMESTAMP)"
         freshness:
           warn_after: {count: 90, period: day}
         columns:
@@ -16,45 +15,39 @@ sources:
             description: date of purchase
           - name: orders_id
             description: foreign key to ship
-            tests: # Column-level test
+            tests:
               - not_null
-          - name: pdt_id
+          - name: pdt_id # Assuming this is the correct column name in raw_gz_sales for product ID
             description: foreign key to product
-            tests: # Column-level test
+            tests:
               - not_null
           - name: revenue
             description: the amount paid by the customer to purchase the product. revenue = quantity * selling_price
           - name: quantity
             description: the quantity of products purchased for a given order
-        tests: # Table-level tests for sales
-          - unique: # This test uses concatenation for a composite key
+        tests:
+          - unique:
               column_name: "(orders_id || '-' || pdt_id)"
-          # Uncomment the dbt_utils version if you have dbt_utils installed and prefer it:
-          # - dbt_utils.unique_combination_of_columns:
-          #     columns:
-          #       - orders_id
-          #       - pdt_id
 
       - name: product
-        identifier: raw_gz_product # Ensure this matches your actual raw table name
+        identifier: raw_gz_product
         description: products of Greenweez
         columns:
-          - name: products_id # Ensure this matches your actual column name
+          - name: products_id # Ensure this matches your actual column name in raw_gz_product
             description: Primary key
-            tests: # Column-level tests for product_id
+            tests:
               - unique
               - not_null
           - name: purchase_price
             description: the purchase price of the product
-          # Add other columns from your raw_gz_product table if needed
 
       - name: ship
-        identifier: raw_gz_ship # Ensure this matches your actual raw table name
+        identifier: raw_gz_ship
         description: shipping data for Greenweez orders
         columns:
-          - name: orders_id # Ensure this matches your actual column name
+          - name: orders_id # Ensure this matches your actual column name in raw_gz_ship
             description: Primary key
-            tests: # Column-level tests for orders_id
+            tests:
               - unique
               - not_null
           - name: shipping_fee
@@ -63,4 +56,226 @@ sources:
             description: the cost of preparing the parcel in the distribution centre/warehouse
           - name: ship_cost
             description: shipping cost paid by Greenweez to the carrier/logistics provider
-          # Add other columns from your raw_gz_ship table if needed
+
+      - name: adwords # This is the dbt source name
+        identifier: raw_gz_adwords # This is the actual table name in BigQuery
+        description: Raw data from Google Adwords campaigns
+        columns:
+          - name: date_date
+            description: Date of the ad campaign data
+          - name: paid_source
+            description: The platform where the ad was run (e.g., 'adwords')
+          - name: campaign_key
+            description: Unique identifier for the campaign
+          - name: camPGN_name
+            description: Original name of the ad campaign (will be renamed in staging)
+          - name: ads_cost
+            description: Cost of the ad campaign
+          - name: impression
+            description: Number of impressions the ad received
+          - name: click
+            description: Number of clicks the ad received
+
+      - name: bing
+        identifier: raw_gz_bing
+        description: Raw data from Bing Ads campaigns
+        columns:
+          - name: date_date
+            description: Date of the ad campaign data
+          - name: paid_source
+            description: The platform where the ad was run (e.g., 'bing')
+          - name: campaign_key
+            description: Unique identifier for the campaign
+          - name: camPGN_name
+            description: Original name of the ad campaign (will be renamed in staging)
+          - name: ads_cost
+            description: Cost of the ad campaign
+          - name: impression
+            description: Number of impressions the ad received
+          - name: click
+            description: Number of clicks the ad received
+
+      - name: criteo
+        identifier: raw_gz_criteo
+        description: Raw data from Criteo campaigns
+        columns:
+          - name: date_date
+            description: Date of the ad campaign data
+          - name: paid_source
+            description: The platform where the ad was run (e.g., 'criteo')
+          - name: campaign_key
+            description: Unique identifier for the campaign
+          - name: camPGN_name
+            description: Original name of the ad campaign (will be renamed in staging)
+          - name: ads_cost
+            description: Cost of the ad campaign
+          - name: impression
+            description: Number of impressions the ad received
+          - name: click
+            description: Number of clicks the ad received
+
+      - name: facebook
+        identifier: raw_gz_facebook
+        description: Raw data from Facebook Ads campaigns
+        columns:
+          - name: date_date
+            description: Date of the ad campaign data
+          - name: paid_source
+            description: The platform where the ad was run (e.g., 'facebook')
+          - name: campaign_key
+            description: Unique identifier for the campaign
+          - name: camPGN_name
+            description: Original name of the ad campaign (will be renamed in staging)
+          - name: ads_cost
+            description: Cost of the ad campaign
+          - name: impression
+            description: Number of impressions the ad received
+          - name: click
+            description: Number of clicks the ad received
+
+models:
+  
+    - name: int_campaigns # Now a list item under my_new_project
+      description: Combined and cleaned ad campaign data from all sources.
+      columns:
+        - name: date_date
+          description: Date of the ad campaign data.
+          tests:
+            - not_null
+        - name: paid_source
+          description: The platform where the ad was run (e.g., 'adwords', 'bing', 'criteo', 'facebook').
+          tests:
+            - not_null
+        - name: campaign_key
+          description: Unique identifier for the campaign.
+          tests:
+            - not_null
+        - name: campaign_name
+          description: Name of the ad campaign.
+        - name: ads_cost
+          description: Cost of the ad campaign.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: ads_cost
+                expression: ">= 0"
+        - name: impression
+          description: Number of impressions the ad received.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: impression
+                expression: ">= 0"
+        - name: click
+          description: Number of clicks the ad received.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: click
+                expression: ">= 0"
+      tests: # Table-level test for the composite primary key
+        - dbt_utils.unique_combination_of_columns:
+            columns: ["date_date", "paid_source", "campaign_key"]
+
+    - name: int_campaigns_day # Now a list item under my_new_project
+      description: Daily aggregated ad campaign data.
+      columns:
+        - name: date_date
+          description: The date of the aggregated campaign data.
+          tests:
+            - not_null
+            - unique # date_date should be unique in this daily aggregation
+        - name: daily_ads_cost
+          description: Total ad cost for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: daily_ads_cost
+                expression: ">= 0"
+        - name: daily_impressions
+          description: Total impressions for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: daily_impressions
+                expression: ">= 0"
+        - name: daily_clicks
+          description: Total clicks for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: daily_clicks
+                expression: ">= 0"
+
+    - name: finance_days # Assuming this model is also defined this way
+      description: Daily financial aggregated data for the finance team.
+      columns:
+        - name: date_date
+          description: The date of the aggregated data.
+          tests:
+            - not_null
+            - unique
+        - name: nb_transactions
+          description: Number of unique transactions per day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: nb_transactions
+                expression: ">= 0"
+        - name: revenue
+          description: Total revenue for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: revenue
+                expression: ">= 0"
+        - name: margin
+          description: Total margin for the day (revenue - purchase_cost).
+          tests:
+            - not_null
+        - name: operational_margin
+          description: Total operational margin for the day (margin + shipping_fee - log_cost - ship_cost).
+          tests:
+            - not_null
+        - name: purchase_cost
+          description: Total purchase cost for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: purchase_cost
+                expression: ">= 0"
+        - name: shipping_fee
+          description: Total shipping fee for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: shipping_fee
+                expression: ">= 0"
+        - name: log_cost
+          description: Total logistics cost for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: log_cost
+                expression: ">= 0"
+        - name: ship_cost
+          description: Total shipping cost for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: ship_cost
+                expression: ">= 0"
+        - name: quantity
+          description: Total quantity of products sold for the day.
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: quantity
+                expression: ">= 0"
+        - name: average_basket
+          description: Average basket value for the day (revenue / number of transactions).
+          tests:
+            - not_null
+            - dbt_utils.at_least_one:
+                column_name: average_basket
+                expression: ">= 0"

@@ -38,10 +38,9 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   my_new_project:
     # Applies to all files under models/example/
-    example:
-      +materialized: table
-# Configuration specific to the 'mart' subfolder
+    
+    # Configuration specific to the 'mart' subfolder
     mart:
-      +materialized: table
+      +materialized: table # This sets the default materialization for mart models to 'table'
       finance: # This targets models specifically in the 'models/mart/finance/' folder
-        +schema: finance # <--- ADD THIS LINE: Sets the BigQuery dataset name for these models
+        +schema: finance # Sets the BigQuery dataset name for these models
