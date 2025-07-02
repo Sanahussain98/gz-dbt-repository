@@ -1,0 +1,66 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: gz_raw_data # Ensure this dataset exists in BigQuery
+    tables:
+      - name: sales
+        identifier: raw_gz_sales # Ensure this matches your actual raw table name
+        description: sales of Greenweez / we have one row per product_id found in each orders_id
+        # Freshness testing for sales table (assuming date_date is suitable)
+        loaded_at_field: "CAST(date_date AS TIMESTAMP)" # Adjust type cast if needed for your database
+        freshness:
+          warn_after: {count: 90, period: day}
+        columns:
+          - name: date_date
+            description: date of purchase
+          - name: orders_id
+            description: foreign key to ship
+            tests: # Column-level test
+              - not_null
+          - name: pdt_id
+            description: foreign key to product
+            tests: # Column-level test
+              - not_null
+          - name: revenue
+            description: the amount paid by the customer to purchase the product. revenue = quantity * selling_price
+          - name: quantity
+            description: the quantity of products purchased for a given order
+        tests: # Table-level tests for sales
+          - unique: # This test uses concatenation for a composite key
+              column_name: "(orders_id || '-' || pdt_id)"
+          # Uncomment the dbt_utils version if you have dbt_utils installed and prefer it:
+          # - dbt_utils.unique_combination_of_columns:
+          #     columns:
+          #       - orders_id
+          #       - pdt_id
+
+      - name: product
+        identifier: raw_gz_product # Ensure this matches your actual raw table name
+        description: products of Greenweez
+        columns:
+          - name: products_id # Ensure this matches your actual column name
+            description: Primary key
+            tests: # Column-level tests for product_id
+              - unique
+              - not_null
+          - name: purchase_price
+            description: the purchase price of the product
+          # Add other columns from your raw_gz_product table if needed
+
+      - name: ship
+        identifier: raw_gz_ship # Ensure this matches your actual raw table name
+        description: shipping data for Greenweez orders
+        columns:
+          - name: orders_id # Ensure this matches your actual column name
+            description: Primary key
+            tests: # Column-level tests for orders_id
+              - unique
+              - not_null
+          - name: shipping_fee
+            description: the price the customer pays for shipping
+          - name: log_cost
+            description: the cost of preparing the parcel in the distribution centre/warehouse
+          - name: ship_cost
+            description: shipping cost paid by Greenweez to the carrier/logistics provider
+          # Add other columns from your raw_gz_ship table if needed
