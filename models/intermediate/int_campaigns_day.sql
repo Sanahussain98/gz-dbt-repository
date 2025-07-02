@@ -1,3 +1,4 @@
+
 SELECT
     date_date,
     SUM(ads_cost) AS daily_ads_cost,
@@ -8,4 +9,4 @@ FROM
 GROUP BY
     date_date
 ORDER BY
-    date_date DESC -
+    date_date DESC -- Order by date in reverse chronological order

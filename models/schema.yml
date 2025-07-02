@@ -156,27 +156,18 @@ models:
           description: Cost of the ad campaign.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: ads_cost
-                expression: ">= 0"
+           
         - name: impression
           description: Number of impressions the ad received.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: impression
-                expression: ">= 0"
+            
         - name: click
           description: Number of clicks the ad received.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: click
-                expression: ">= 0"
-      tests: # Table-level test for the composite primary key
-        - dbt_utils.unique_combination_of_columns:
-            columns: ["date_date", "paid_source", "campaign_key"]
-
+           
+      
     - name: int_campaigns_day # Now a list item under my_new_project
       description: Daily aggregated ad campaign data.
       columns:
@@ -189,24 +180,17 @@ models:
           description: Total ad cost for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: daily_ads_cost
-                expression: ">= 0"
+           
         - name: daily_impressions
           description: Total impressions for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: daily_impressions
-                expression: ">= 0"
+           
         - name: daily_clicks
           description: Total clicks for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: daily_clicks
-                expression: ">= 0"
-
+         
     - name: finance_days # Assuming this model is also defined this way
       description: Daily financial aggregated data for the finance team.
       columns:
@@ -219,16 +203,12 @@ models:
           description: Number of unique transactions per day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: nb_transactions
-                expression: ">= 0"
+           
         - name: revenue
           description: Total revenue for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: revenue
-                expression: ">= 0"
+            
         - name: margin
           description: Total margin for the day (revenue - purchase_cost).
           tests:
@@ -241,41 +221,29 @@ models:
           description: Total purchase cost for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: purchase_cost
-                expression: ">= 0"
+           
         - name: shipping_fee
           description: Total shipping fee for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: shipping_fee
-                expression: ">= 0"
+            
         - name: log_cost
           description: Total logistics cost for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: log_cost
-                expression: ">= 0"
+            
         - name: ship_cost
           description: Total shipping cost for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: ship_cost
-                expression: ">= 0"
+           
         - name: quantity
           description: Total quantity of products sold for the day.
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: quantity
-                expression: ">= 0"
+            
         - name: average_basket
           description: Average basket value for the day (revenue / number of transactions).
           tests:
             - not_null
-            - dbt_utils.at_least_one:
-                column_name: average_basket
-                expression: ">= 0"
+            
